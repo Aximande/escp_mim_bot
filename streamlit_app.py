@@ -188,9 +188,9 @@ with st.sidebar:
     
     # Sélecteur de langue (plus besoin de vérifier si language existe)
     language = st.radio("Langue / Language", ["Français", "English"], 
-                       index=0 if st.session_state.language == "Français" else 1)
+                       index=0 if st.session_state.get("language", "Français") == "Français" else 1)
     
-    if language != st.session_state.language:
+    if language != st.session_state.get("language", "Français"):
         st.session_state.language = language
         # Réinitialiser la conversation si la langue change
         if 'messages' in st.session_state and st.session_state.messages and len(st.session_state.messages) > 1:
@@ -283,7 +283,7 @@ def generate_response(prompt, knowledge_base, user_context):
     with st.spinner(t('thinking')):
         try:
             # Construction des messages pour l'API avec la bonne langue
-            if st.session_state.language == "Français":
+            if st.session_state.get("language", "Français") == "Français":
                 system_content = """Vous êtes le Conseiller en Spécialisations ESCP, un assistant expert dédié à aider les étudiants du Master in Management (MiM) à choisir leur spécialisation idéale. Votre base de connaissances contient les informations détaillées sur toutes les spécialisations disponibles à l'ESCP Business School.
 
 OBJECTIF PRINCIPAL:
@@ -339,7 +339,7 @@ DECISION-MAKING METHODOLOGY:
             return response.choices[0].message.content
             
         except Exception as e:
-            error_msg = "Désolé, une erreur s'est produite: " if st.session_state.language == "Français" else "Sorry, an error occurred: "
+            error_msg = "Désolé, une erreur s'est produite: " if st.session_state.get("language", "Français") == "Français" else "Sorry, an error occurred: "
             return f"{error_msg}{str(e)}"
 
 # Extraction et utilisation des spécialisations mentionnées dans la conversation
@@ -389,9 +389,12 @@ def export_conversation():
     conversation_text = "# Conversation avec le Conseiller en Spécialisations ESCP\n\n"
     conversation_text += f"Date: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
     
-    for msg in st.session_state.messages:
-        role = "Étudiant" if msg["role"] == "user" else "Conseiller"
-        conversation_text += f"**{role}**: {msg['content']}\n\n"
+    if "messages" in st.session_state and st.session_state.messages:
+        for msg in st.session_state.messages:
+            role = "Étudiant" if msg["role"] == "user" else "Conseiller"
+            conversation_text += f"**{role}**: {msg['content']}\n\n"
+    else:
+        conversation_text += "Aucune conversation n'a encore eu lieu.\n\n"
     
     return conversation_text
 
@@ -457,7 +460,7 @@ with main_container:
         """, unsafe_allow_html=True)
         
         # Questions traduites selon la langue
-        if st.session_state.language == "Français":
+        if st.session_state.get("language", "Français") == "Français":
             question_categories = {
                 "Explorer les options": [
                     "Quelles spécialisations sont disponibles sur le campus de Paris ?",
