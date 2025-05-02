@@ -247,95 +247,6 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
-# Conteneur principal avec style
-main_container = st.container()
-with main_container:
-    # Initialisation de l'historique des messages
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-        # Message de bienvenue initial
-        system_welcome = {
-            "role": "assistant",
-            "content": t('welcome_message')
-        }
-        st.session_state.messages.append(system_welcome)
-
-    # Traitement de la réponse si il y a une nouvelle question
-    if len(st.session_state.messages) > 0 and st.session_state.messages[-1]["role"] == "user":
-        user_context = create_enriched_context()
-        response = generate_response(st.session_state.messages[-1]["content"], knowledge_base, user_context)
-        
-        # Ajouter la réponse à l'historique
-        st.session_state.messages.append({"role": "assistant", "content": response})
-    
-    # Affichage de l'historique complet des messages (après ajout de la nouvelle réponse s'il y en a une)
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-    
-    # Questions suggérées (seulement si peu de messages)
-    if len(st.session_state.messages) <= 1:  # Si c'est le début de la conversation
-        st.markdown(f"""
-        <div style='background-color: rgba(56, 43, 115, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border: 1px solid rgba(56, 43, 115, 0.1);'>
-            <h3 style='color: #382B73; margin-top: 0;'>{t('questions_suggested')}</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Questions traduites selon la langue
-        if st.session_state.language == "Français":
-            question_categories = {
-                "Explorer les options": [
-                    "Quelles spécialisations sont disponibles sur le campus de Paris ?",
-                    "Quelles options existent en finance ?",
-                    "Présentez-moi les spécialisations en développement durable.",
-                ],
-                "Approfondir une spécialisation": [
-                    "Que propose la spécialisation International Business and Sustainability (OP01) ?",
-                    "Quels sont les objectifs d'Option E (OP24) ?",
-                    "Quels cours sont proposés dans Digital Project Management ?",
-                ],
-                "Comparer des options": [
-                    "Quelles sont les différences entre Digital Project Management 1 et 2 ?",
-                    "Comparez les spécialisations en Marketing.",
-                ]
-            }
-        else:  # English
-            question_categories = {
-                "Explore options": [
-                    "Which specializations are available on the Paris campus?",
-                    "What options exist in finance?",
-                    "Show me the sustainability specializations.",
-                ],
-                "Explore a specialization": [
-                    "What does the International Business and Sustainability (OP01) specialization offer?",
-                    "What are the objectives of Option E (OP24)?",
-                    "What courses are offered in Digital Project Management?",
-                ],
-                "Compare options": [
-                    "What are the differences between Digital Project Management 1 and 2?",
-                    "Compare the Marketing specializations.",
-                ]
-            }
-        
-        # Afficher les catégories de questions dans des colonnes
-        cols = st.columns(len(question_categories))
-        
-        for i, (category, questions) in enumerate(question_categories.items()):
-            with cols[i]:
-                st.markdown(f"<h4 style='color: #382B73;'>{category}</h4>", unsafe_allow_html=True)
-                for question in questions:
-                    if st.button(question, key=f"q_{i}_{question}"):
-                        # Simuler une question utilisateur quand un bouton est cliqué
-                        st.session_state.messages.append({"role": "user", "content": question})
-                        st.rerun()
-
-    # Input de l'utilisateur - maintenant APRÈS l'affichage de tout le reste
-    if prompt := st.chat_input(t('question_prompt')):  # Utiliser la traduction pour le placeholder
-        # Ajouter le message de l'utilisateur à l'historique
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        # Recharger la page pour traiter la réponse
-        st.rerun()
-
 # Construction du contexte enrichi pour l'API
 def create_enriched_context():
     # Créer un contexte qui inclut les filtres et préférences
@@ -505,3 +416,92 @@ with st.sidebar:
             st.text_area("Comment pouvons-nous améliorer?", key="feedback_text")
             if st.button("Envoyer"):
                 st.success("Merci pour vos suggestions!")
+
+# Conteneur principal avec style
+main_container = st.container()
+with main_container:
+    # Initialisation de l'historique des messages
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+        # Message de bienvenue initial
+        system_welcome = {
+            "role": "assistant",
+            "content": t('welcome_message')
+        }
+        st.session_state.messages.append(system_welcome)
+
+    # Traitement de la réponse si il y a une nouvelle question
+    if len(st.session_state.messages) > 0 and st.session_state.messages[-1]["role"] == "user":
+        user_context = create_enriched_context()
+        response = generate_response(st.session_state.messages[-1]["content"], knowledge_base, user_context)
+        
+        # Ajouter la réponse à l'historique
+        st.session_state.messages.append({"role": "assistant", "content": response})
+    
+    # Affichage de l'historique complet des messages (après ajout de la nouvelle réponse s'il y en a une)
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    
+    # Questions suggérées (seulement si peu de messages)
+    if len(st.session_state.messages) <= 1:  # Si c'est le début de la conversation
+        st.markdown(f"""
+        <div style='background-color: rgba(56, 43, 115, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border: 1px solid rgba(56, 43, 115, 0.1);'>
+            <h3 style='color: #382B73; margin-top: 0;'>{t('questions_suggested')}</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Questions traduites selon la langue
+        if st.session_state.language == "Français":
+            question_categories = {
+                "Explorer les options": [
+                    "Quelles spécialisations sont disponibles sur le campus de Paris ?",
+                    "Quelles options existent en finance ?",
+                    "Présentez-moi les spécialisations en développement durable.",
+                ],
+                "Approfondir une spécialisation": [
+                    "Que propose la spécialisation International Business and Sustainability (OP01) ?",
+                    "Quels sont les objectifs d'Option E (OP24) ?",
+                    "Quels cours sont proposés dans Digital Project Management ?",
+                ],
+                "Comparer des options": [
+                    "Quelles sont les différences entre Digital Project Management 1 et 2 ?",
+                    "Comparez les spécialisations en Marketing.",
+                ]
+            }
+        else:  # English
+            question_categories = {
+                "Explore options": [
+                    "Which specializations are available on the Paris campus?",
+                    "What options exist in finance?",
+                    "Show me the sustainability specializations.",
+                ],
+                "Explore a specialization": [
+                    "What does the International Business and Sustainability (OP01) specialization offer?",
+                    "What are the objectives of Option E (OP24)?",
+                    "What courses are offered in Digital Project Management?",
+                ],
+                "Compare options": [
+                    "What are the differences between Digital Project Management 1 and 2?",
+                    "Compare the Marketing specializations.",
+                ]
+            }
+        
+        # Afficher les catégories de questions dans des colonnes
+        cols = st.columns(len(question_categories))
+        
+        for i, (category, questions) in enumerate(question_categories.items()):
+            with cols[i]:
+                st.markdown(f"<h4 style='color: #382B73;'>{category}</h4>", unsafe_allow_html=True)
+                for question in questions:
+                    if st.button(question, key=f"q_{i}_{question}"):
+                        # Simuler une question utilisateur quand un bouton est cliqué
+                        st.session_state.messages.append({"role": "user", "content": question})
+                        st.rerun()
+
+    # Input de l'utilisateur - maintenant APRÈS l'affichage de tout le reste
+    if prompt := st.chat_input(t('question_prompt')):  # Utiliser la traduction pour le placeholder
+        # Ajouter le message de l'utilisateur à l'historique
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        # Recharger la page pour traiter la réponse
+        st.rerun()
