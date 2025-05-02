@@ -225,9 +225,12 @@ with st.sidebar:
     
     # Bouton traduit
     if st.button(t('new_conversation')):
+        # Réinitialiser toutes les variables de session pertinentes
         st.session_state.messages = []
         if 'specialization_filter' in st.session_state:
             st.session_state.specialization_filter = []
+        if 'specialization_mentions' in st.session_state:
+            st.session_state.specialization_mentions = {}
         # Ajouter un message de bienvenue dans la bonne langue
         st.session_state.messages.append({
             "role": "assistant",
@@ -268,9 +271,10 @@ def create_enriched_context():
         context_parts.append(f"- Compétences à développer: {', '.join(skills_focus)}")
     
     # Ajouter l'historique récent des messages pour le contexte de conversation
-    last_messages = st.session_state.messages[-5:] if len(st.session_state.messages) > 5 else st.session_state.messages
-    for msg in last_messages:
-        context_parts.append(f"{msg['role'].capitalize()}: {msg['content']}")
+    if "messages" in st.session_state and st.session_state.messages:
+        last_messages = st.session_state.messages[-5:] if len(st.session_state.messages) > 5 else st.session_state.messages
+        for msg in last_messages:
+            context_parts.append(f"{msg['role'].capitalize()}: {msg['content']}")
     
     return "\n".join(context_parts)
 
@@ -356,11 +360,11 @@ def extract_specialization_mentions(text):
             st.session_state.specialization_mentions[code] = 1
 
 # Extraire les mentions des spécialisations de la dernière réponse
-if st.session_state.messages and st.session_state.messages[-1]["role"] == "assistant":
+if "messages" in st.session_state and st.session_state.messages and st.session_state.messages[-1]["role"] == "assistant":
     extract_specialization_mentions(st.session_state.messages[-1]["content"])
 
 # Afficher les spécialisations les plus discutées dans une section en bas de page
-if st.session_state.specialization_mentions:
+if "specialization_mentions" in st.session_state and st.session_state.specialization_mentions:
     with st.expander("Spécialisations les plus discutées", expanded=False):
         sorted_mentions = dict(sorted(st.session_state.specialization_mentions.items(), 
                               key=lambda item: item[1], reverse=True))
@@ -431,7 +435,7 @@ with main_container:
         st.session_state.messages.append(system_welcome)
 
     # Traitement de la réponse si il y a une nouvelle question
-    if len(st.session_state.messages) > 0 and st.session_state.messages[-1]["role"] == "user":
+    if "messages" in st.session_state and len(st.session_state.messages) > 0 and st.session_state.messages[-1]["role"] == "user":
         user_context = create_enriched_context()
         response = generate_response(st.session_state.messages[-1]["content"], knowledge_base, user_context)
         
@@ -439,12 +443,13 @@ with main_container:
         st.session_state.messages.append({"role": "assistant", "content": response})
     
     # Affichage de l'historique complet des messages (après ajout de la nouvelle réponse s'il y en a une)
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    if "messages" in st.session_state:
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
     
     # Questions suggérées (seulement si peu de messages)
-    if len(st.session_state.messages) <= 1:  # Si c'est le début de la conversation
+    if "messages" not in st.session_state or len(st.session_state.messages) <= 1:  # Si c'est le début de la conversation
         st.markdown(f"""
         <div style='background-color: rgba(56, 43, 115, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border: 1px solid rgba(56, 43, 115, 0.1);'>
             <h3 style='color: #382B73; margin-top: 0;'>{t('questions_suggested')}</h3>
