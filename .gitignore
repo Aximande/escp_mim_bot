@@ -1,4 +1,25 @@
+# Secrets
 .env
+.env.local
+.env.production
+.env.*.local
+credentials.json
+service_account.json
+
+# GCP / Firebase
+*.pem
+*.key
+*-adminsdk-*.json
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Python
 __pycache__/
 *.pyc
+.venv/
+venv/
+
+# OS
 .DS_Store
+Thumbs.db
